@@ -73,8 +73,10 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
         row[8] = backlogItem.resolvedDate ? Utilities.formatDate(backlogItem.resolvedDate, 'America/Sao_Paulo','dd/MM/yyyy HH:mm:ss') : "";
         row[9] = backlogItem.doneDate ? Utilities.formatDate(backlogItem.doneDate, 'America/Sao_Paulo','dd/MM/yyyy HH:mm:ss') : "";
         row[10] = backlogItem.removedDate ? Utilities.formatDate(backlogItem.removedDate, 'America/Sao_Paulo','dd/MM/yyyy HH:mm:ss') : "";
-        row[11] = backlogItem.cycleTime(this.holidays) ? backlogItem.cycleTime(this.holidays) : "";
-        row[12] = backlogItem.leadTime(this.holidays) ? backlogItem.leadTime(this.holidays) : "";
+        var cycleTime = backlogItem.cycleTime(this.holidays);
+        row[11] = cycleTime != undefined ? cycleTime : "";
+        var leadTime = backlogItem.leadTime(this.holidays)
+        row[12] = leadTime != undefined ? leadTime : "";
 
         return row;
     }
