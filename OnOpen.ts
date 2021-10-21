@@ -5,7 +5,7 @@ import { AzureDevopsBacklogItemRepository } from "./infrastructure/BacklogItem/A
 import { GoogleSheetsBacklogItemRepository } from "./infrastructure/BacklogItem/GoogleSheetsBacklogItemRepository";
 import { GoogleSheetsSprintMovementRepository } from "./infrastructure/SprintMovement/GoogleSheetsSprintMovementRepository";
 
-export function refreshFromServer(backlogItemsSheetName: string, sprintMovementsSheetName: string, holidaysSheetName?:string) {
+function refreshFromServer(backlogItemsSheetName: string, sprintMovementsSheetName: string, holidaysSheetName?:string) {
 
     var dataSheet = SpreadsheetApp.getActive().getSheetByName('Dados Azure Devops');
     var data = dataSheet.getRange(1, 2, 4).getValues();
@@ -29,4 +29,18 @@ export function refreshFromServer(backlogItemsSheetName: string, sprintMovements
     sprintMovementWriter.WriteSprintMovements(workItems);
 
     
+}
+
+function onOpen() {
+
+    var ui = SpreadsheetApp.getUi();
+    ui.createMenu('Atualizar Dados')
+        .addItem('Pegar dados do Azure Devops', 'getAzureDevopsWorkItems')
+        .addToUi();
+
+    refreshFromServer('WorkItems', 'WorkItems x Sprints', 'Feriados');
+}
+
+function getAzureDevopsWorkItems() {
+    refreshFromServer('WorkItems', 'WorkItems x Sprints', 'Feriados');
 }
