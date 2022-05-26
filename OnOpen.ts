@@ -26,8 +26,9 @@ function refreshFromServer(backlogItemsSheetName: string, sprintMovementsSheetNa
 
     var workItems = backlogItemReader.GetAllBacklogItems();
     backlogItemWriter.WriteBacklogItems(workItems);
+    console.log("Started to write movements: " + Date.now().toLocaleString);
     sprintMovementWriter.WriteSprintMovements(workItems);
-
+    console.log("Finished to write movements: " + Date.now().toLocaleString);
     
 }
 
