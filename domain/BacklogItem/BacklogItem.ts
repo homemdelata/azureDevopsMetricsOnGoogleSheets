@@ -16,6 +16,7 @@ export class BacklogItem
     storyPoints: number;
     tags: string;
     sprintMovements: SprintMovement[];
+    currentSprint: string;
   
     constructor(id: number,
                 type: BacklogItemType,
@@ -27,7 +28,8 @@ export class BacklogItem
                 doneDate: Date,
                 removedDate: Date,
                 storyPoints: number,
-                tags: string
+                tags: string,
+                currentSprint: string
     )
     {
         this.id = id;
@@ -57,6 +59,8 @@ export class BacklogItem
         this.storyPoints = storyPoints;
 
         this.tags = tags;
+
+        this.currentSprint = currentSprint;
 
         this.sprintMovements = [];
 

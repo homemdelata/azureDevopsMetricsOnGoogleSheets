@@ -127,7 +127,8 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
                 doneDateString,
                 removedDateString,
                 jsonBacklogItem.fields['Microsoft.VSTS.Scheduling.StoryPoints'],
-                jsonBacklogItem.fields['System.Tags']
+                jsonBacklogItem.fields['System.Tags'],
+                jsonBacklogItem.fields['System.IterationPath']
             );
             backlogItems.set(parseInt(idString), newBacklogItem);
 

@@ -44,7 +44,8 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
                 'Data Finalização',
                 'Data Deleção',
                 'Cycle Time',
-                'Lead Time'
+                'Lead Time',
+                'Current Sprint'
                 ]
             ];
 
@@ -77,6 +78,7 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
         row[11] = cycleTime != undefined ? cycleTime : "";
         var leadTime = backlogItem.leadTime(this.holidays)
         row[12] = leadTime != undefined ? leadTime : "";
+        row[13] = backlogItem.currentSprint;
 
         return row;
     }
