@@ -17,6 +17,7 @@ export class BacklogItem
     tags: string;
     sprintMovements: SprintMovement[];
     currentSprint: string;
+    orderRank: number;
   
     constructor(id: number,
                 type: BacklogItemType,
@@ -29,7 +30,8 @@ export class BacklogItem
                 removedDate: Date,
                 storyPoints: number,
                 tags: string,
-                currentSprint: string
+                currentSprint: string,
+                orderRank: number
     )
     {
         this.id = id;
@@ -62,8 +64,9 @@ export class BacklogItem
 
         this.currentSprint = currentSprint;
 
-        this.sprintMovements = [];
+        this.orderRank = orderRank;
 
+        this.sprintMovements = [];
 
     }
 
@@ -111,15 +114,13 @@ export class BacklogItem
 
         holidays.forEach(day => {
             if ((day >= startDate) && (day <= endDate)) {
-            /* If it is not saturday (6) or sunday (0), substract it */
-            if ((day.getDay() % 6) != 0) {
-                days--;
+                /* If it is not saturday (6) or sunday (0), substract it */
+                if ((day.getDay() % 6) != 0) {
+                    days--;
+                }
             }
-        }
-    });
+        });
 
-  return days;
-}
-
-
+        return days;
+    }
 }

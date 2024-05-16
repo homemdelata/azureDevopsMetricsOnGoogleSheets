@@ -83,16 +83,16 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
         var requests = []
 
         console.log('Parsing all urls to call: ' + Date.now().toLocaleString());
-      
+
         for(var i = 0; i < workItemsURLs.length; i++) {
-          
-          requests[i] = {
+
+        requests[i] = {
             'headers': this.headers,
             'url': workItemsURLs[i]['url'] + '?$expand=all',
             'muteHttpExceptions': true
-          }
         }
-      
+        }
+
         console.log('Starting fetch all: ' + Date.now().toLocaleString());
 
         var workItemsResponses = UrlFetchApp.fetchAll(requests);
@@ -128,7 +128,8 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
                 removedDateString,
                 jsonBacklogItem.fields['Microsoft.VSTS.Scheduling.StoryPoints'],
                 jsonBacklogItem.fields['System.Tags'],
-                jsonBacklogItem.fields['System.IterationPath']
+                jsonBacklogItem.fields['System.IterationPath'],
+                jsonBacklogItem.fields['Microsoft.VSTS.Common.StackRank']
             );
             backlogItems.set(parseInt(idString), newBacklogItem);
 
@@ -136,7 +137,7 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
                 'headers': this.headers,
                 'url': jsonBacklogItem._links.workItemUpdates.href + '?$expand=all',
                 'muteHttpExceptions': true
-              }
+            }
 
         }
 
@@ -150,9 +151,9 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
             var jsonUpdates = JSON.parse(updatesResponses[i].getContentText());
             var backlogItemId = jsonUpdates.value[0].workItemId;
             backlogItems.get(backlogItemId).sprintMovements = this.parseSprintMovementsFromUpdates(jsonUpdates);
-          }
+        }
         console.log('Finished: ' + Date.now().toLocaleString());
-     
+
         return backlogItems;
     }
 

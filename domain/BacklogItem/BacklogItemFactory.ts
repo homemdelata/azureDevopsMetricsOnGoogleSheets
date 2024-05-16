@@ -16,7 +16,8 @@ export class BacklogItemFactory {
         removedDateString: string,
         storyPointsString: string,
         tags: string,
-        currentSprint: string) : BacklogItem{
+        currentSprint: string,
+        orderRankString:string) : BacklogItem{
 
         var id : number = parseInt(idString);
         var type : BacklogItemType = BacklogItemType[typeString];
@@ -27,6 +28,7 @@ export class BacklogItemFactory {
         var doneDate : Date = doneDateString ? new Date(doneDateString) : null;
         var removedDate : Date = removedDateString ? new Date(removedDateString) : null;
         var storyPoints : number = storyPointsString ? parseInt(storyPointsString) : null;
+        var orderRank : number = orderRankString ? parseInt(orderRankString) : null;
 
         var backlogItem : BacklogItem = new BacklogItem(
             id,
@@ -40,7 +42,8 @@ export class BacklogItemFactory {
             removedDate,
             storyPoints,
             tags,
-            currentSprint
+            currentSprint,
+            orderRank
         )
 
         return backlogItem;
