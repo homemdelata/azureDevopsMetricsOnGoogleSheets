@@ -95,6 +95,10 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
                 return "Team Task";
             case BacklogItemType.UserStory:
                 return "User Story";
+            case BacklogItemType.Spike:
+                return "Spike";
+            case BacklogItemType.TechnicalDebt:
+                return "Technical Debt";
             default:
                 throw new Error("Invalid Type value");
         }
