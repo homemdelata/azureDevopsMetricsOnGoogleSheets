@@ -21,7 +21,9 @@ function refreshFromServer(backlogItemsSheetName: string, sprintMovementsSheetNa
     const refreshBacklogItemsUseCase = new RefreshBacklogItemsUseCase();
     refreshBacklogItemsUseCase.execute(azureDevopsBacklogItemRepository, googleSheetsBacklogItemRepository, new Date(lastUpdateDate));
 
-    data[4][0] = new Date().toISOString().substring(0, 10);
+    var yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    data[4][0] = yesterday.toISOString().substring(0, 10);
     dataSheet.getRange(1, 2, 5).setValues(data);
 
 }

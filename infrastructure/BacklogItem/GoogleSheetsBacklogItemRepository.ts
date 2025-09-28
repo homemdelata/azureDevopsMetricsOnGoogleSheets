@@ -4,6 +4,7 @@ import { BacklogItemRepository } from "../../domain/BacklogItem/BacklogItemRepos
 import { BacklogItemStatus } from "../../domain/BacklogItem/BacklogItemStatus";
 import { BacklogItemType } from "../../domain/BacklogItem/BacklogItemType";
 import { SprintMovement } from "../../domain/SprintMovement/SprintMovement";
+import { SprintMovementAction } from "../../domain/SprintMovement/SprintMovementAction";
 import { SprintMovementFactory } from "../../domain/SprintMovement/SprintMovementFactory";
 
 export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
@@ -51,8 +52,11 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
         throw new Error("Method not implemented.");
     }
 
-    MergeBacklogItems(destinationWorkItems: Map<number, BacklogItem>, sourceLastUpdatedWorkItems: unknown): Map<number, BacklogItem> {
-        throw new Error("Method not implemented.");
+    MergeBacklogItems(destinationWorkItems: Map<number, BacklogItem>, sourceLastUpdatedWorkItems: Map<number, BacklogItem>): Map<number, BacklogItem> {
+        sourceLastUpdatedWorkItems.forEach((sourceItem, id) => {
+            destinationWorkItems.set(id, sourceItem);
+        });
+        return destinationWorkItems;
     }
     
     WriteBacklogItems(backlogItems: Map<number, BacklogItem>): void {
@@ -86,6 +90,7 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
             values[i+1] = this.ConvertBacklogItemToRow(workItemsArray[i]);
         }
 
+        this.backlogItemsDataSheet.clear();
         this.backlogItemsDataSheet.getRange(1,1,rowsNum, colsNum).setValues(values);
     }
 
@@ -117,9 +122,9 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
     ConvertRowToBacklogItem(row: string[]): BacklogItem {
         var backlogItem = BacklogItemFactory.CreateBacklogItemFromStrings(
             row[0],
-            row[1],
+            BacklogItemType[this.convertStringToBacklogItemType(row[1])],
             row[2],
-            row[3],
+            BacklogItemStatus[this.convertStringToBacklogItemStatus(row[3])],
             row[6],
             row[7],
             row[8],
@@ -154,6 +159,26 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
         }
 
     }
+
+    private convertStringToBacklogItemType(typeString: string) :BacklogItemType {
+        switch (typeString) {
+            case "Bug":
+                return BacklogItemType.Bug;
+            case "Product Backlog Item":
+                return BacklogItemType.ProductBacklogItem;
+            case "Team Task":
+                return BacklogItemType.TeamTask;
+            case "User Story":
+                return BacklogItemType.UserStory;
+            case "Spike":
+                return BacklogItemType.Spike;
+            case "Technical Debt":
+                return BacklogItemType.TechnicalDebt;
+            default:
+                throw new Error("Invalid Type value");
+        }
+    }
+
     private convertBacklogItemStatusToString(backlogItemStatus: BacklogItemStatus) :string {
         switch (backlogItemStatus) {
             case BacklogItemStatus.TODO:
@@ -166,6 +191,23 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
                 return "Closed";
             case BacklogItemStatus.REMOVED:
                 return "Removed";
+            default:
+                throw new Error("Invalid State value");
+        }
+    }
+
+    private convertStringToBacklogItemStatus(stateString: string) :BacklogItemStatus {
+        switch (stateString) {
+            case "New":
+                return BacklogItemStatus.TODO;
+            case "Active":
+                return BacklogItemStatus.DOING;
+            case "Resolved":
+                return BacklogItemStatus.RESOLVED;
+            case "Closed":
+                return BacklogItemStatus.DONE;
+            case "Removed":
+                return BacklogItemStatus.REMOVED;
             default:
                 throw new Error("Invalid State value");
         }
@@ -188,7 +230,8 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
 
         var rowsNum = values.length;
         var colsNum = values[0].length;
-        
+
+        this.sprintMovementsDataSheet.clear();        
         this.sprintMovementsDataSheet.getRange(1,1,rowsNum, colsNum).setValues(values);
     }
 
@@ -213,11 +256,10 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
             row[0],
             row[1],
             row[2],
-            row[3]
+            SprintMovementAction[row[3]]
         );
 
         return sprintMovement;
     }
-
 
 }

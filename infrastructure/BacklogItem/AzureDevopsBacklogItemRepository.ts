@@ -24,7 +24,7 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
         this.url = baseURL + '_apis/wit/wiql?api-version=6.0';
     }
 
-    MergeBacklogItems(destinationWorkItems: Map<number, BacklogItem>, sourceLastUpdatedWorkItems: unknown): Map<number, BacklogItem> {
+    MergeBacklogItems(destinationWorkItems: Map<number, BacklogItem>, sourceLastUpdatedWorkItems: Map<number, BacklogItem>): Map<number, BacklogItem> {
         throw new Error("Method not implemented.");
     }
 
