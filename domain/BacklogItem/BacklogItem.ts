@@ -18,7 +18,9 @@ export class BacklogItem
     sprintMovements: SprintMovement[];
     currentSprint: string;
     orderRank: number;
-  
+    boardColumn: string;
+
+
     constructor(id: number,
                 type: BacklogItemType,
                 title: string,
@@ -31,7 +33,8 @@ export class BacklogItem
                 storyPoints: number,
                 tags: string,
                 currentSprint: string,
-                orderRank: number
+                orderRank: number,
+                boardColumn: string
     )
     {
         this.id = id;
@@ -65,6 +68,7 @@ export class BacklogItem
         this.currentSprint = currentSprint;
 
         this.orderRank = orderRank;
+        this.boardColumn = boardColumn;
 
         this.sprintMovements = [];
 

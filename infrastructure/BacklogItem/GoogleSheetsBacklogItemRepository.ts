@@ -46,7 +46,8 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
                 'Cycle Time',
                 'Lead Time',
                 'Current Sprint',
-                'Ordem Geral'
+                'Ordem Geral',
+                'Board Column'
                 ]
             ];
 
@@ -81,6 +82,7 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
         row[12] = leadTime != undefined ? leadTime : "";
         row[13] = backlogItem.currentSprint;
         row[14] = backlogItem.orderRank;
+        row[15] = backlogItem.boardColumn;
 
         return row;
     }

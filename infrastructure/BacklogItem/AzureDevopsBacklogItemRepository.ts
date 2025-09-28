@@ -72,6 +72,35 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
 
     }
 
+    private fetchAllWithRetriesInChunks(
+        requests: GoogleAppsScript.URL_Fetch.Request[],
+        chunkSize: number,
+        maxAttempts: number = 3
+    ): GoogleAppsScript.URL_Fetch.HTTPResponse[] {
+        const allResponses: GoogleAppsScript.URL_Fetch.HTTPResponse[] = [];
+        for (let i = 0; i < requests.length; i += chunkSize) {
+            const chunk = requests.slice(i, i + chunkSize);
+            let responses: GoogleAppsScript.URL_Fetch.HTTPResponse[] = [];
+            let attempts = 0;
+            let success = false;
+            while (attempts < maxAttempts && !success) {
+                try {
+                    responses = UrlFetchApp.fetchAll(chunk);
+                    success = true;
+                } catch (e) {
+                    attempts++;
+                    if (attempts === maxAttempts) {
+                        throw new Error(`Failed to fetch chunk after ${maxAttempts} attempts: ${e}`);
+                    }
+                    Utilities.sleep(1000);
+                }
+            }
+            allResponses.push(...responses);
+            Utilities.sleep(1000);
+        }
+        return allResponses;
+    }
+
     GetAllBacklogItems(): Map<number, BacklogItem> {
         console.log('Starting to get the list of work items: ' + Date.now().toLocaleString());
 
@@ -95,7 +124,9 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
 
         console.log('Starting fetch all: ' + Date.now().toLocaleString());
 
-        var workItemsResponses = UrlFetchApp.fetchAll(requests);
+        const chunkSize = 100;
+
+        const workItemsResponses = this.fetchAllWithRetriesInChunks(requests, chunkSize);
 
         console.log('Starting to create the list in memory: ' + Date.now().toLocaleString());
 
@@ -129,7 +160,8 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
                 jsonBacklogItem.fields['Microsoft.VSTS.Scheduling.StoryPoints'],
                 jsonBacklogItem.fields['System.Tags'],
                 jsonBacklogItem.fields['System.IterationPath'],
-                jsonBacklogItem.fields['Microsoft.VSTS.Common.StackRank']
+                jsonBacklogItem.fields['Microsoft.VSTS.Common.StackRank'],
+                jsonBacklogItem.fields['System.BoardColumn']
             );
             backlogItems.set(parseInt(idString), newBacklogItem);
 
@@ -145,7 +177,9 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
 
         console.log('Starting processing updates: ' + Date.now().toLocaleString());
 
-        var updatesResponses = UrlFetchApp.fetchAll(updates);
+        const updatesChunkSize = 100;
+
+        const updatesResponses = this.fetchAllWithRetriesInChunks(updates, updatesChunkSize);
 
         for(var i = 0; i < updatesResponses.length; i++) {
             var jsonUpdates = JSON.parse(updatesResponses[i].getContentText());
