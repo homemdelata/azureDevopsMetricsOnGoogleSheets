@@ -4,11 +4,13 @@ import { BacklogItemStatus } from "../../domain/BacklogItem/BacklogItemStatus";
 import { BacklogItemType } from "../../domain/BacklogItem/BacklogItemType";
 
 export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
-    private backlogItemsSheetName: string;
+    private backlogItemsDataSheet: GoogleAppsScript.Spreadsheet.Sheet;
     private holidays: Date[];
+    private sprintMovementsDataSheet: GoogleAppsScript.Spreadsheet.Sheet;
 
-    constructor (backlogItemsSheetName: string, holidaysSheetName?:string){
-        this.backlogItemsSheetName = backlogItemsSheetName;
+    constructor (backlogItemsSheetName: string, sprintMovementsSheetName: string, holidaysSheetName?:string){
+        this.backlogItemsDataSheet = SpreadsheetApp.getActive().getSheetByName(backlogItemsSheetName);
+        this.sprintMovementsDataSheet = SpreadsheetApp.getActive().getSheetByName(sprintMovementsSheetName);
         this.holidays = [];
         if (holidaysSheetName)
         {
@@ -21,15 +23,13 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
 
         }
     }
-
+    
     GetAllBacklogItems(): Map<number, BacklogItem> {
         throw new Error("Method not implemented.");
     }
 
     WriteBacklogItems(backlogItems: Map<number, BacklogItem>): void {
         
-        var dataSheet = SpreadsheetApp.getActive().getSheetByName(this.backlogItemsSheetName);
-
         var values = [
             [
                 'ID',
@@ -59,7 +59,7 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
             values[i+1] = this.ConvertBacklogItemToRow(workItemsArray[i]);
         }
 
-        dataSheet.getRange(1,1,rowsNum, colsNum).setValues(values);
+        this.backlogItemsDataSheet.getRange(1,1,rowsNum, colsNum).setValues(values);
     }
 
     ConvertBacklogItemToRow(backlogItem: BacklogItem): string[] {
@@ -121,7 +121,44 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
             default:
                 throw new Error("Invalid State value");
         }
-
     }
+
+    WriteSprintMovements(backlogItems: Map<number, BacklogItem>): void {
+        var values = [
+            [
+                'Work Item ID',
+                'Sprint',
+                'Data',
+                'Entrada/Saída',
+                'Mov. Story Points'
+            ]
+        ];
+
+        backlogItems.forEach((backlogItem: BacklogItem) => {
+            values.push.apply(values, this.ConvertSprintMovementToRow(backlogItem));
+        });
+
+        var rowsNum = values.length;
+        var colsNum = values[0].length;
+        
+        this.sprintMovementsDataSheet.getRange(1,1,rowsNum, colsNum).setValues(values);
+    }
+
+    ConvertSprintMovementToRow(backlogItem: BacklogItem): string[] {
+        var sprintMovementRows = [];
+
+        for (var i=0; i < backlogItem.sprintMovements.length; i++) {
+            var row = []
+            row[0] = backlogItem.id.toString();
+            row[1] = backlogItem.sprintMovements[i].sprint;
+            row[2] = Utilities.formatDate(backlogItem.sprintMovements[i].date, 'America/Sao_Paulo','dd/MM/yyyy HH:mm:ss');
+            row[3] = backlogItem.sprintMovements[i].action.toString();
+            row[4] = (backlogItem.storyPoints * backlogItem.sprintMovements[i].action).toString();
+            sprintMovementRows.push(row);
+        }
+
+        return sprintMovementRows;
+    }
+
 
 }

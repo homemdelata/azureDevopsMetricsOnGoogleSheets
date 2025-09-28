@@ -2,7 +2,6 @@ import { BacklogItemRepository } from "../../domain/BacklogItem/BacklogItemRepos
 import { BacklogItem } from "../../domain/BacklogItem/BacklogItem";
 
 export class BacklogItemWriter {
-
     private backlogItemRepository: BacklogItemRepository;
 
     constructor (backlogItemRepository: BacklogItemRepository)
@@ -13,4 +12,10 @@ export class BacklogItemWriter {
     public WriteBacklogItems(backlogItems: Map<number, BacklogItem>): void {
         this.backlogItemRepository.WriteBacklogItems(backlogItems);
     }
+
+    WriteSprintMovements(backlogItems: Map<number, BacklogItem>) {
+        this.backlogItemRepository.WriteSprintMovements(backlogItems);
+    }
+
+
 }

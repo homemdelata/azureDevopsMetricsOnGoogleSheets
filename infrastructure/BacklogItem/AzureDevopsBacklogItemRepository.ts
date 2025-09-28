@@ -29,6 +29,9 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
         
 
     }
+    WriteSprintMovements(backlogItems: Map<number, BacklogItem>): void {
+        throw new Error("Method not implemented.");
+    }
     
     WriteBacklogItems(backlogItems: Map<number, BacklogItem>): void {
         throw new Error("Method not implemented.");

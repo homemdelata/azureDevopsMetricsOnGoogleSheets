@@ -5,4 +5,6 @@ export interface BacklogItemRepository{
 
     WriteBacklogItems(backlogItems: Map<number, BacklogItem>): void;
 
+    WriteSprintMovements(backlogItems: Map<number, BacklogItem>): void;
+
 }

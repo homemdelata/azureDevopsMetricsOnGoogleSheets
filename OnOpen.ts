@@ -1,9 +1,8 @@
 import { BacklogItemReader } from "./application/BacklogItem/BacklogItemReader";
 import { BacklogItemWriter } from "./application/BacklogItem/BacklogItemWriter";
-import { SprintMovementWriter } from "./application/SprintMovement/SprintMovementWriter";
+import { RefreshBacklogItemsUseCase } from "./application/UseCases/RefreshBacklogItemsUseCase";
 import { AzureDevopsBacklogItemRepository } from "./infrastructure/BacklogItem/AzureDevopsBacklogItemRepository"
 import { GoogleSheetsBacklogItemRepository } from "./infrastructure/BacklogItem/GoogleSheetsBacklogItemRepository";
-import { GoogleSheetsSprintMovementRepository } from "./infrastructure/SprintMovement/GoogleSheetsSprintMovementRepository";
 
 function refreshFromServer(backlogItemsSheetName: string, sprintMovementsSheetName: string, holidaysSheetName?:string) {
 
@@ -16,19 +15,10 @@ function refreshFromServer(backlogItemsSheetName: string, sprintMovementsSheetNa
     var wiql = data[2][0];
 
     var azureDevopsBacklogItemRepository = new AzureDevopsBacklogItemRepository(user, token, baseURL, wiql);
-    var backlogItemReader = new BacklogItemReader(azureDevopsBacklogItemRepository);
+    var googleSheetsBacklogItemRepository = new GoogleSheetsBacklogItemRepository(backlogItemsSheetName, sprintMovementsSheetName, holidaysSheetName);
 
-    var googleSheetsBacklogItemRepository = new GoogleSheetsBacklogItemRepository(backlogItemsSheetName, holidaysSheetName);
-    var backlogItemWriter = new BacklogItemWriter(googleSheetsBacklogItemRepository);
-
-    var googleSheetsSprintMovementRepository = new GoogleSheetsSprintMovementRepository(sprintMovementsSheetName);
-    var sprintMovementWriter = new SprintMovementWriter(googleSheetsSprintMovementRepository);
-
-    var workItems = backlogItemReader.GetAllBacklogItems();
-    backlogItemWriter.WriteBacklogItems(workItems);
-    console.log("Started to write movements: " + Date.now().toLocaleString);
-    sprintMovementWriter.WriteSprintMovements(workItems);
-    console.log("Finished to write movements: " + Date.now().toLocaleString);
+    const refreshBacklogItemsUseCase = new RefreshBacklogItemsUseCase();
+    refreshBacklogItemsUseCase.execute(azureDevopsBacklogItemRepository, googleSheetsBacklogItemRepository)
     
 }
 
