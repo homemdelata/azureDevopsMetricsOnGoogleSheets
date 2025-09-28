@@ -9,7 +9,6 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
 
     private headers: GoogleAppsScript.URL_Fetch.HttpHeaders;
     private data: { query: string; };
-    private options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
     private url: string;
 
     constructor (user: string,
@@ -22,13 +21,13 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
             "query" : wiql
         }
 
-        this.options = this.createRequestOptions(this.headers, this.data);
-
         this.url = baseURL + '_apis/wit/wiql?api-version=6.0';
-
-        
-
     }
+
+    MergeBacklogItems(destinationWorkItems: Map<number, BacklogItem>, sourceLastUpdatedWorkItems: Map<number, BacklogItem>): Map<number, BacklogItem> {
+        throw new Error("Method not implemented.");
+    }
+
     WriteSprintMovements(backlogItems: Map<number, BacklogItem>): void {
         throw new Error("Method not implemented.");
     }
@@ -107,7 +106,104 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
     GetAllBacklogItems(): Map<number, BacklogItem> {
         console.log('Starting to get the list of work items: ' + Date.now().toLocaleString());
 
-        var response = UrlFetchApp.fetch(this.url, this.options);
+        const options = this.createRequestOptions(this.headers, this.data);
+
+        var response = UrlFetchApp.fetch(this.url, options);
+        var responseJSON = JSON.parse(response.getContentText());
+
+        var workItemsURLs = responseJSON['workItems'];
+
+        var requests = []
+
+        console.log('Parsing all urls to call: ' + Date.now().toLocaleString());
+
+        for(var i = 0; i < workItemsURLs.length; i++) {
+
+        requests[i] = {
+            'headers': this.headers,
+            'url': workItemsURLs[i]['url'] + '?$expand=all',
+            'muteHttpExceptions': true
+        }
+        }
+
+        console.log('Starting fetch all: ' + Date.now().toLocaleString());
+
+        const chunkSize = 100;
+
+        const workItemsResponses = this.fetchAllWithRetriesInChunks(requests, chunkSize);
+
+        console.log('Starting to create the list in memory: ' + Date.now().toLocaleString());
+
+        var backlogItems = new Map<number, BacklogItem>();
+        var updates = [];
+
+        for(var i = 0; i < workItemsResponses.length; i++) {
+            
+            var jsonBacklogItem = JSON.parse(workItemsResponses[i].getContentText());
+
+            var idString = jsonBacklogItem.id;
+
+            var fixedTypeString = jsonBacklogItem.fields['System.WorkItemType'].replace(/\s/g, "");
+            var fixedStateString = this.convertAzureStateStringToBacklogItemStateString(jsonBacklogItem.fields['System.State']);
+            var startDateString = jsonBacklogItem.fields['Custom.FixStartDate'] ? jsonBacklogItem.fields['Custom.FixStartDate'] : jsonBacklogItem.fields['Microsoft.VSTS.Common.ActivatedDate'];
+            var resolvedDateString = jsonBacklogItem.fields['Custom.FixResolvedDate'] ? jsonBacklogItem.fields['Custom.FixResolvedDate'] : jsonBacklogItem.fields['Microsoft.VSTS.Common.ResolvedDate'];
+            var doneDateString = jsonBacklogItem.fields['Custom.FixDoneDate'] ? jsonBacklogItem.fields['Custom.FixDoneDate'] : jsonBacklogItem.fields['Microsoft.VSTS.Common.ClosedDate'];
+
+            var removedDateString = (jsonBacklogItem.fields['System.State'] == "Removed") ? jsonBacklogItem.fields['Microsoft.VSTS.Common.StateChangeDate'] : null;
+
+            var newBacklogItem = BacklogItemFactory.CreateBacklogItemFromStrings(
+                idString,
+                fixedTypeString,
+                jsonBacklogItem.fields['System.Title'],
+                fixedStateString,
+                jsonBacklogItem.fields['System.CreatedDate'],
+                startDateString,
+                resolvedDateString,
+                doneDateString,
+                removedDateString,
+                jsonBacklogItem.fields['Microsoft.VSTS.Scheduling.StoryPoints'],
+                jsonBacklogItem.fields['System.Tags'],
+                jsonBacklogItem.fields['System.IterationPath'],
+                jsonBacklogItem.fields['Microsoft.VSTS.Common.StackRank'],
+                jsonBacklogItem.fields['System.BoardColumn']
+            );
+            backlogItems.set(parseInt(idString), newBacklogItem);
+
+            updates[i] = {
+                'headers': this.headers,
+                'url': jsonBacklogItem._links.workItemUpdates.href + '?$expand=all',
+                'muteHttpExceptions': true
+            }
+
+        }
+
+        console.log('Finished processing the Work Items: ' + Date.now().toLocaleString());
+
+        console.log('Starting processing updates: ' + Date.now().toLocaleString());
+
+        const updatesChunkSize = 100;
+
+        const updatesResponses = this.fetchAllWithRetriesInChunks(updates, updatesChunkSize);
+
+        for(var i = 0; i < updatesResponses.length; i++) {
+            var jsonUpdates = JSON.parse(updatesResponses[i].getContentText());
+            var backlogItemId = jsonUpdates.value[0].workItemId;
+            backlogItems.get(backlogItemId).sprintMovements = this.parseSprintMovementsFromUpdates(jsonUpdates);
+        }
+        console.log('Finished: ' + Date.now().toLocaleString());
+
+        return backlogItems;
+    }
+
+    GetLastUpdatedBacklogItems(lastUpdateDate: Date): Map<number, BacklogItem> {
+        console.log('Starting to get the list of work items: ' + Date.now().toLocaleString());
+
+        var lastUpdatedData = this.data;
+        lastUpdatedData.query += ` AND [System.ChangedDate] > '${lastUpdateDate.toISOString().substring(0, 10)}'`;
+
+        const options = this.createRequestOptions(this.headers, lastUpdatedData);
+
+        var response = UrlFetchApp.fetch(this.url, options);
         var responseJSON = JSON.parse(response.getContentText());
 
         var workItemsURLs = responseJSON['workItems'];

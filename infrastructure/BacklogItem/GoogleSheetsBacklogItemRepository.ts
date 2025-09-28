@@ -1,7 +1,11 @@
 import { BacklogItem } from "../../domain/BacklogItem/BacklogItem";
+import { BacklogItemFactory } from "../../domain/BacklogItem/BacklogItemFactory";
 import { BacklogItemRepository } from "../../domain/BacklogItem/BacklogItemRepository";
 import { BacklogItemStatus } from "../../domain/BacklogItem/BacklogItemStatus";
 import { BacklogItemType } from "../../domain/BacklogItem/BacklogItemType";
+import { SprintMovement } from "../../domain/SprintMovement/SprintMovement";
+import { SprintMovementAction } from "../../domain/SprintMovement/SprintMovementAction";
+import { SprintMovementFactory } from "../../domain/SprintMovement/SprintMovementFactory";
 
 export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
     private backlogItemsDataSheet: GoogleAppsScript.Spreadsheet.Sheet;
@@ -23,11 +27,38 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
 
         }
     }
-    
+
     GetAllBacklogItems(): Map<number, BacklogItem> {
+        const backlogItemsSheetData = this.backlogItemsDataSheet.getDataRange().getValues();
+        var backlogItems = new Map<number, BacklogItem>();
+
+        for (var i=1; i < backlogItemsSheetData.length; i++) {
+            var backlogItem = this.ConvertRowToBacklogItem(backlogItemsSheetData[i]);
+            backlogItems.set(backlogItem.id, backlogItem);
+        }
+
+        const sprintMovementsSheetData = this.sprintMovementsDataSheet.getDataRange().getValues();
+        for (var i=1; i < sprintMovementsSheetData.length; i++) {
+            var workItemId = parseInt(sprintMovementsSheetData[i][0].toString());
+            backlogItems.get(workItemId)?.sprintMovements.push(this.ConvertRowToSprintMovement(sprintMovementsSheetData[i]));
+        }
+
+        return backlogItems;
+    }
+
+
+
+    GetLastUpdatedBacklogItems(lastUpdateDate: Date): Map<number, BacklogItem> {
         throw new Error("Method not implemented.");
     }
 
+    MergeBacklogItems(destinationWorkItems: Map<number, BacklogItem>, sourceLastUpdatedWorkItems: Map<number, BacklogItem>): Map<number, BacklogItem> {
+        sourceLastUpdatedWorkItems.forEach((sourceItem, id) => {
+            destinationWorkItems.set(id, sourceItem);
+        });
+        return destinationWorkItems;
+    }
+    
     WriteBacklogItems(backlogItems: Map<number, BacklogItem>): void {
         
         var values = [
@@ -59,6 +90,7 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
             values[i+1] = this.ConvertBacklogItemToRow(workItemsArray[i]);
         }
 
+        this.backlogItemsDataSheet.clear();
         this.backlogItemsDataSheet.getRange(1,1,rowsNum, colsNum).setValues(values);
     }
 
@@ -87,6 +119,27 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
         return row;
     }
 
+    ConvertRowToBacklogItem(row: string[]): BacklogItem {
+        var backlogItem = BacklogItemFactory.CreateBacklogItemFromStrings(
+            row[0],
+            BacklogItemType[this.convertStringToBacklogItemType(row[1])],
+            row[2],
+            BacklogItemStatus[this.convertStringToBacklogItemStatus(row[3])],
+            row[6],
+            row[7],
+            row[8],
+            row[9],
+            row[10],
+            row[5],
+            row[4],
+            row[13],
+            row[14],
+            row[15]
+        )
+
+        return backlogItem;
+    }
+
     private convertBacklogItemTypeToString(backlogItemType: BacklogItemType) :string {
         switch (backlogItemType) {
             case BacklogItemType.Bug:
@@ -106,6 +159,26 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
         }
 
     }
+
+    private convertStringToBacklogItemType(typeString: string) :BacklogItemType {
+        switch (typeString) {
+            case "Bug":
+                return BacklogItemType.Bug;
+            case "Product Backlog Item":
+                return BacklogItemType.ProductBacklogItem;
+            case "Team Task":
+                return BacklogItemType.TeamTask;
+            case "User Story":
+                return BacklogItemType.UserStory;
+            case "Spike":
+                return BacklogItemType.Spike;
+            case "Technical Debt":
+                return BacklogItemType.TechnicalDebt;
+            default:
+                throw new Error("Invalid Type value");
+        }
+    }
+
     private convertBacklogItemStatusToString(backlogItemStatus: BacklogItemStatus) :string {
         switch (backlogItemStatus) {
             case BacklogItemStatus.TODO:
@@ -118,6 +191,23 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
                 return "Closed";
             case BacklogItemStatus.REMOVED:
                 return "Removed";
+            default:
+                throw new Error("Invalid State value");
+        }
+    }
+
+    private convertStringToBacklogItemStatus(stateString: string) :BacklogItemStatus {
+        switch (stateString) {
+            case "New":
+                return BacklogItemStatus.TODO;
+            case "Active":
+                return BacklogItemStatus.DOING;
+            case "Resolved":
+                return BacklogItemStatus.RESOLVED;
+            case "Closed":
+                return BacklogItemStatus.DONE;
+            case "Removed":
+                return BacklogItemStatus.REMOVED;
             default:
                 throw new Error("Invalid State value");
         }
@@ -140,7 +230,8 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
 
         var rowsNum = values.length;
         var colsNum = values[0].length;
-        
+
+        this.sprintMovementsDataSheet.clear();        
         this.sprintMovementsDataSheet.getRange(1,1,rowsNum, colsNum).setValues(values);
     }
 
@@ -160,5 +251,15 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
         return sprintMovementRows;
     }
 
+    ConvertRowToSprintMovement(row: string[]): SprintMovement {
+        var sprintMovement = SprintMovementFactory.CreateSprintMovementFromStrings(
+            row[0],
+            row[1],
+            row[2],
+            SprintMovementAction[row[3]]
+        );
+
+        return sprintMovement;
+    }
 
 }

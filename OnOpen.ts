@@ -7,19 +7,25 @@ import { GoogleSheetsBacklogItemRepository } from "./infrastructure/BacklogItem/
 function refreshFromServer(backlogItemsSheetName: string, sprintMovementsSheetName: string, holidaysSheetName?:string) {
 
     var dataSheet = SpreadsheetApp.getActive().getSheetByName('Dados Azure Devops');
-    var data = dataSheet.getRange(1, 2, 4).getValues();
+    var data = dataSheet.getRange(1, 2, 5).getValues();
 
     var user = data[0][0];
     var token = data[1][0];
     var baseURL = data[3][0];
     var wiql = data[2][0];
+    var lastUpdateDate = data[4][0];
 
     var azureDevopsBacklogItemRepository = new AzureDevopsBacklogItemRepository(user, token, baseURL, wiql);
     var googleSheetsBacklogItemRepository = new GoogleSheetsBacklogItemRepository(backlogItemsSheetName, sprintMovementsSheetName, holidaysSheetName);
 
     const refreshBacklogItemsUseCase = new RefreshBacklogItemsUseCase();
-    refreshBacklogItemsUseCase.execute(azureDevopsBacklogItemRepository, googleSheetsBacklogItemRepository)
-    
+    refreshBacklogItemsUseCase.execute(azureDevopsBacklogItemRepository, googleSheetsBacklogItemRepository, new Date(lastUpdateDate));
+
+    var yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    data[4][0] = yesterday.toISOString().substring(0, 10);
+    dataSheet.getRange(1, 2, 5).setValues(data);
+
 }
 
 function onOpen() {
