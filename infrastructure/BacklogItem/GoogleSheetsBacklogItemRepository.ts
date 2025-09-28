@@ -1,4 +1,5 @@
 import { BacklogItem } from "../../domain/BacklogItem/BacklogItem";
+import { BacklogItemFactory } from "../../domain/BacklogItem/BacklogItemFactory";
 import { BacklogItemRepository } from "../../domain/BacklogItem/BacklogItemRepository";
 import { BacklogItemStatus } from "../../domain/BacklogItem/BacklogItemStatus";
 import { BacklogItemType } from "../../domain/BacklogItem/BacklogItemType";
@@ -23,11 +24,29 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
 
         }
     }
-    
+
     GetAllBacklogItems(): Map<number, BacklogItem> {
+        const backlogItemsSheetData = this.backlogItemsDataSheet.getDataRange().getValues();
+        var backlogItems = new Map<number, BacklogItem>();
+
+        for (var i=1; i < backlogItemsSheetData.length; i++) {
+            var backlogItem = this.ConvertRowToBacklogItem(backlogItemsSheetData[i]);
+            backlogItems.set(backlogItem.id, backlogItem);
+        }
+
+        return backlogItems;
+    }
+
+
+
+    GetLastUpdatedBacklogItems(lastUpdateDate: Date): Map<number, BacklogItem> {
         throw new Error("Method not implemented.");
     }
 
+    MergeBacklogItems(destinationWorkItems: Map<number, BacklogItem>, sourceLastUpdatedWorkItems: unknown): Map<number, BacklogItem> {
+        throw new Error("Method not implemented.");
+    }
+    
     WriteBacklogItems(backlogItems: Map<number, BacklogItem>): void {
         
         var values = [
@@ -85,6 +104,27 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
         row[15] = backlogItem.boardColumn;
 
         return row;
+    }
+
+    ConvertRowToBacklogItem(row: string[]): BacklogItem {
+        var backlogItem = BacklogItemFactory.CreateBacklogItemFromStrings(
+            row[0],
+            row[1],
+            row[2],
+            row[3],
+            row[6],
+            row[7],
+            row[8],
+            row[9],
+            row[10],
+            row[5],
+            row[4],
+            row[13],
+            row[14],
+            row[15]
+        )
+
+        return backlogItem;
     }
 
     private convertBacklogItemTypeToString(backlogItemType: BacklogItemType) :string {
