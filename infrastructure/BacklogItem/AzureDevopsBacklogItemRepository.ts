@@ -76,7 +76,7 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
     }
 
     private fetchAllWithRetriesInChunks(
-        requests: GoogleAppsScript.URL_Fetch.Request[],
+        requests: any[],
         chunkSize: number,
         maxAttempts: number = 3
     ): GoogleAppsScript.URL_Fetch.HTTPResponse[] {
