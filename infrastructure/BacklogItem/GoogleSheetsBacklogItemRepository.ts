@@ -3,6 +3,8 @@ import { BacklogItemFactory } from "../../domain/BacklogItem/BacklogItemFactory"
 import { BacklogItemRepository } from "../../domain/BacklogItem/BacklogItemRepository";
 import { BacklogItemStatus } from "../../domain/BacklogItem/BacklogItemStatus";
 import { BacklogItemType } from "../../domain/BacklogItem/BacklogItemType";
+import { SprintMovement } from "../../domain/SprintMovement/SprintMovement";
+import { SprintMovementFactory } from "../../domain/SprintMovement/SprintMovementFactory";
 
 export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
     private backlogItemsDataSheet: GoogleAppsScript.Spreadsheet.Sheet;
@@ -32,6 +34,12 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
         for (var i=1; i < backlogItemsSheetData.length; i++) {
             var backlogItem = this.ConvertRowToBacklogItem(backlogItemsSheetData[i]);
             backlogItems.set(backlogItem.id, backlogItem);
+        }
+
+        const sprintMovementsSheetData = this.sprintMovementsDataSheet.getDataRange().getValues();
+        for (var i=1; i < sprintMovementsSheetData.length; i++) {
+            var workItemId = parseInt(sprintMovementsSheetData[i][0].toString());
+            backlogItems.get(workItemId)?.sprintMovements.push(this.ConvertRowToSprintMovement(sprintMovementsSheetData[i]));
         }
 
         return backlogItems;
@@ -198,6 +206,17 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
         }
 
         return sprintMovementRows;
+    }
+
+    ConvertRowToSprintMovement(row: string[]): SprintMovement {
+        var sprintMovement = SprintMovementFactory.CreateSprintMovementFromStrings(
+            row[0],
+            row[1],
+            row[2],
+            row[3]
+        );
+
+        return sprintMovement;
     }
 
 
