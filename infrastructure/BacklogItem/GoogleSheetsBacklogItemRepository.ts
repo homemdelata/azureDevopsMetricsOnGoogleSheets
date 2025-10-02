@@ -78,7 +78,8 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
                 'Lead Time',
                 'Current Sprint',
                 'Ordem Geral',
-                'Board Column'
+                'Board Column',
+                'Parent ID'
                 ]
             ];
 
@@ -115,6 +116,7 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
         row[13] = backlogItem.currentSprint;
         row[14] = backlogItem.orderRank;
         row[15] = backlogItem.boardColumn;
+        row[16] = backlogItem.parentId ? backlogItem.parentId : "";
 
         return row;
     }
@@ -134,7 +136,8 @@ export class GoogleSheetsBacklogItemRepository implements BacklogItemRepository{
             row[4],
             row[13],
             row[14],
-            row[15]
+            row[15],
+            row[16]
         )
 
         return backlogItem;
