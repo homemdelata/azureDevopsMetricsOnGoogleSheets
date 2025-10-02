@@ -18,7 +18,8 @@ export class BacklogItemFactory {
         tags: string,
         currentSprint: string,
         orderRankString:string,
-        boardColumn: string) : BacklogItem{
+        boardColumn: string,
+        parentId: string) : BacklogItem{
 
         var id : number = parseInt(idString);
         var type : BacklogItemType = BacklogItemType[typeString];
@@ -31,6 +32,7 @@ export class BacklogItemFactory {
         var storyPoints : number = storyPointsString ? parseInt(storyPointsString) : null;
         var orderRank : number = orderRankString ? parseInt(orderRankString) : null;
         var boardColumn : string = boardColumn ? boardColumn : "";
+        var parentIdNum : number = parentId ? parseInt(parentId) : null;
 
         var backlogItem : BacklogItem = new BacklogItem(
             id,
@@ -46,7 +48,8 @@ export class BacklogItemFactory {
             tags,
             currentSprint,
             orderRank,
-            boardColumn
+            boardColumn,
+            parentIdNum
         )
 
         return backlogItem;

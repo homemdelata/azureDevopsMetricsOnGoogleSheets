@@ -165,7 +165,8 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
                 jsonBacklogItem.fields['System.Tags'],
                 jsonBacklogItem.fields['System.IterationPath'],
                 jsonBacklogItem.fields['Microsoft.VSTS.Common.StackRank'],
-                jsonBacklogItem.fields['System.BoardColumn']
+                jsonBacklogItem.fields['System.BoardColumn'],
+                jsonBacklogItem.fields['System.Parent']
             );
             backlogItems.set(parseInt(idString), newBacklogItem);
 
@@ -260,7 +261,8 @@ export class AzureDevopsBacklogItemRepository implements BacklogItemRepository {
                 jsonBacklogItem.fields['System.Tags'],
                 jsonBacklogItem.fields['System.IterationPath'],
                 jsonBacklogItem.fields['Microsoft.VSTS.Common.StackRank'],
-                jsonBacklogItem.fields['System.BoardColumn']
+                jsonBacklogItem.fields['System.BoardColumn'],
+                jsonBacklogItem.fields['System.Parent']
             );
             backlogItems.set(parseInt(idString), newBacklogItem);
 
